@@ -1,0 +1,62 @@
+#!/bin/bash
+function start {
+	mkdir -p ./tmp
+	mkdir -p ./tmp/pids
+	
+	echo "Starting the worker processes..."
+	RACK_ENV=$ENVIRONMENT PIDFILE=./tmp/pids/aim-sync0.pid BACKGROUND=yes QUEUE=synchronization bundle exec rake resque:work > worker1.log
+	
+	RACK_ENV=$ENVIRONMENT PIDFILE=./tmp/pids/aim-sync1.pid BACKGROUND=yes QUEUE=synchronization bundle exec rake resque:work > worker2.log 
+	
+	RACK_ENV=$ENVIRONMENT PIDFILE=./tmp/pids/aim-sync2.pid BACKGROUND=yes QUEUE=synchronization bundle exec rake resque:work > worker3.log
+	echo "Done"
+}
+
+function stop {
+	echo "Stopping the rescue processes..."
+
+	if [ -f ./tmp/pids/migrations0.pid ]; then
+		kill -9 `cat ./tmp/pids/aim-sync0.pid`
+		rm ./tmp/pids/aim-sync0.pid
+	fi
+	
+	if [ -f ./tmp/pids/migrations1.pid ]; then
+		kill -9 `cat ./tmp/pids/aim-sync1.pid`
+		rm ./tmp/pids/aim-sync1.pid
+	fi
+	
+	if [ -f ./tmp/pids/migrations2.pid ]; then
+		kill -9 `cat ./tmp/pids/aim-sync2.pid`
+		rm ./tmp/pids/aim-sync2.pid
+	fi
+
+	echo "Done"
+}
+
+if [ $1 == 'start' ]; then
+	ENVIRONMENT="local"
+	if [ -n "$2" ]; then
+		ENVIRONMENT=$2
+	fi
+		
+	start
+fi
+
+if [ $1 == 'stop' ]; then
+	ENVIRONMENT="local"
+	if [ -n "$2" ]; then
+		ENVIRONMENT=$2
+	fi
+	
+	stop
+fi
+
+if [ $1 == 'restart' ]; then
+	ENVIRONMENT="local"
+	if [ -n "$2" ]; then
+		ENVIRONMENT=$2
+	fi
+	
+	stop
+	start
+fi
