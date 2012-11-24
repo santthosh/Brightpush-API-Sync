@@ -15,17 +15,17 @@ function start {
 function stop {
 	echo "Stopping the rescue processes..."
 
-	if [ -f ./tmp/pids/migrations0.pid ]; then
+	if [ -f ./tmp/pids/aim-sync0.pid ]; then
 		kill -9 `cat ./tmp/pids/aim-sync0.pid`
 		rm ./tmp/pids/aim-sync0.pid
 	fi
 	
-	if [ -f ./tmp/pids/migrations1.pid ]; then
+	if [ -f ./tmp/pids/aim-sync1.pid ]; then
 		kill -9 `cat ./tmp/pids/aim-sync1.pid`
 		rm ./tmp/pids/aim-sync1.pid
 	fi
 	
-	if [ -f ./tmp/pids/migrations2.pid ]; then
+	if [ -f ./tmp/pids/aim-sync2.pid ]; then
 		kill -9 `cat ./tmp/pids/aim-sync2.pid`
 		rm ./tmp/pids/aim-sync2.pid
 	fi
