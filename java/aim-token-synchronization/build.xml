@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="jar" basedir="." name="aim-token-synchronization">
+  <target name="compile">
+    <javac srcdir="src" includeantruntime="false">
+		<classpath>
+	        <pathelement location="libs/log4j-1.2.17.jar"/>
+		</classpath>
+	</javac>
+  </target>
+  <target name="jar" depends="compile">
+    <jar destfile="../../bin/aim-token-synchronization.jar" basedir="bin">
+      <manifest>
+        <attribute name="Main-Class" value="in.brightpush.resque.aim.synchronization.Main"/>
+		<attribute name="Class-Path" value="log4j-1.2.17.jar"/>
+      </manifest>
+    </jar>
+	<copy file="libs/log4j-1.2.17.jar" todir="../../bin/"/>
+  </target>
+</project>
