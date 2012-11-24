@@ -40,6 +40,9 @@ class AIM_iOS_Synchronization
     tick()
     
     Resque.logger.info("Starting synchronization job for AppInMap");
+    
+    system("java -jar bin/aim-token-synchronization.jar")
+    
     Resque.logger.info("Finished migrations. Syncrhonized <0> device tokens")
   end
   

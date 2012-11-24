@@ -39,6 +39,7 @@ set :rack_env,"development"
  namespace :deploy do
   desc "Starts the workers"
   task :start_workers, :roles => :app do
+    run "cd #{release_path}/java/aim-token-synchronization && ant"
     run "cd #{release_path} && bundle install"
     run "cd #{release_path} && scripts/workers restart #{rack_env}"
   end
