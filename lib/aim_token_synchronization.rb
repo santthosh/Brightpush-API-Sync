@@ -32,7 +32,7 @@ class AIM_Token_Synchronization
   end
   
   def name
-    return "AIM iOS Synchronization"
+    return "AIM Token Synchronization"
   end
 
   # Execute the job
