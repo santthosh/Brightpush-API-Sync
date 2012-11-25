@@ -17,5 +17,6 @@
 	<classpathentry kind="lib" path="libs/xpp3-1.1.4c.jar"/>
 	<classpathentry kind="lib" path="libs/jackson-core-2.0.5.jar"/>
 	<classpathentry kind="lib" path="libs/google-http-client-jackson2-1.12.0-beta.jar"/>
+	<classpathentry kind="lib" path="libs/google-api-services-taskqueue-v1beta2-rev3-1.12.0-beta.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
