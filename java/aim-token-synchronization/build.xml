@@ -17,7 +17,7 @@
 	        <pathelement location="libs/xpp3-1.1.4c.jar"/>
 	        <pathelement location="libs/jackson-core-2.0.5.jar"/>
 	        <pathelement location="libs/google-http-client-jackson2-1.12.0-beta.jar"/>
-	        <pathelement location="libs/google-api-services-taskqueue-v1beta2-rev3-1.12.0-beta"/>
+	        <pathelement location="libs/google-api-services-taskqueue-v1beta2-rev3-1.12.0-beta.jar"/>
 		</classpath>
     </javac>
   </target>
