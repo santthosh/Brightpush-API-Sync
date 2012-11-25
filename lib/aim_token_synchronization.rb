@@ -2,7 +2,7 @@ import 'lib/simpledb.rb'
 require 'resque-status'
 
 # Synchronize the device_tokens from AppInMap for given iOS applications
-class AIM_iOS_Synchronization 
+class AIM_Token_Synchronization 
       include Resque::Plugins::Status
   @queue = :synchronization
   
@@ -41,7 +41,7 @@ class AIM_iOS_Synchronization
     
     Resque.logger.info("Starting synchronization job for AppInMap");
     
-    system("java -jar bin/aim-token-synchronization.jar")
+    system("cd bin && java -jar aim-token-synchronization.jar")
     
     Resque.logger.info("Finished migrations. Syncrhonized <0> device tokens")
   end
