@@ -4,17 +4,35 @@
     <javac srcdir="src" includeantruntime="false" destdir="bin">
 		<classpath>
 	        <pathelement location="libs/log4j-1.2.17.jar"/>
+	        <pathelement location="libs/commons-logging-1.1.1.jar"/>
+	        <pathelement location="libs/google-api-client-1.12.0-beta.jar"/>
+	        <pathelement location="libs/google-http-client-1.12.0-beta.jar"/>
+	        <pathelement location="libs/google-oauth-client-1.12.0-beta.jar"/>
+	        <pathelement location="libs/gson-2.1.jar"/>
+	        <pathelement location="libs/guava-jdk5-13.0.jar"/>
+	        <pathelement location="libs/httpclient-4.0.3.jar"/>
+	        <pathelement location="libs/httpcore-4.0.1.jar"/>
+	        <pathelement location="libs/jackson-core-asl-1.9.9.jar"/>
+	        <pathelement location="libs/protobuf-java-2.4.1.jar"/>
+	        <pathelement location="libs/xpp3-1.1.4c.jar"/>
+	        <pathelement location="libs/jackson-core-2.0.5.jar"/>
+	        <pathelement location="libs/google-http-client-jackson2-1.12.0-beta.jar"/>
 		</classpath>
     </javac>
   </target>
+
   <target name="jar" depends="compile">
 	<copy file="src/log4j.properties" todir="bin"/>
+	<copy file="src/googleapi.properties" todir="bin"/>
     <jar destfile="../../bin/aim-token-synchronization.jar" basedir="bin">
       <manifest>
         <attribute name="Main-Class" value="in.brightpush.resque.aim.synchronization.Main"/>
-		<attribute name="Class-Path" value="log4j-1.2.17.jar"/>
+		<attribute name="Class-Path" value="log4j-1.2.17.jar commons-logging-1.1.1.jar google-api-client-1.12.0-beta.jar google-http-client-1.12.0-beta.jar google-oauth-client-1.12.0-beta.jar gson-2.1.jar guava-jdk5-13.0.jar httpclient-4.0.3.jar httpcore-4.0.1.jar jackson-core-asl-1.9.9.jar jsr305-1.3.9.jar protobuf-java-2.4.1.jar xpp3-1.1.4c.jar jackson-core-2.0.5.jar google-http-client-jackson2-1.12.0-beta.jar"/>
       </manifest>
     </jar>
-	<copy file="libs/log4j-1.2.17.jar" todir="../../bin/"/>
+	<copy file="46c7c46027ae423c0dcd01e4a53f3a2fc6fb8877-privatekey.p12" todir="../../bin"/>
+	<copy todir="../../bin">
+    	<fileset dir="libs"/>
+  	</copy>
   </target>
 </project>
