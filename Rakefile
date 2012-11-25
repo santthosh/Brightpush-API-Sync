@@ -1,7 +1,7 @@
 require 'resque/tasks'
 require 'sinatra'
 import 'lib/simpledb.rb'
-import 'lib/aim_ios_synchronization.rb'
+import 'lib/aim_token_synchronization.rb'
 
 task :default => :help
 
