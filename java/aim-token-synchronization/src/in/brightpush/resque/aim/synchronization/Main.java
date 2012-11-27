@@ -1,12 +1,28 @@
 package in.brightpush.resque.aim.synchronization;
 
+import in.brightpush.resque.aim.synchronization.objects.MessagingToken;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.PropertiesCredentials;
+import com.amazonaws.services.cloudsearch.model.CreateDomainRequest;
+import com.amazonaws.services.simpledb.AmazonSimpleDB;
+import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
+import com.amazonaws.services.simpledb.model.BatchPutAttributesRequest;
+import com.amazonaws.services.simpledb.model.NoSuchDomainException;
+import com.amazonaws.services.simpledb.model.ReplaceableAttribute;
+import com.amazonaws.services.simpledb.model.ReplaceableItem;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -19,6 +35,9 @@ import com.google.api.services.taskqueue.TaskqueueScopes;
 import com.google.api.services.taskqueue.model.Task;
 import com.google.api.services.taskqueue.model.Tasks;
 import com.google.api.client.util.Base64;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 public class Main {
 
@@ -60,33 +79,39 @@ public class Main {
         
         com.google.api.services.taskqueue.model.TaskQueue createQueue = getQueue(taskQueue,"tokens-create");
         
+        int createQueueCount = 0;
         java.util.List<Task> tasksList = null;
         do {
             Tasks tasks = getLeasedTasks(taskQueue,"tokens-create",10);
             tasksList = tasks.getItems();
             if(tasksList != null) {
                 for(Task task : tasksList) {
-                    executeTask(task);	
-                    //deleteTask(taskQueue,task,"tokens-create");
+                    if(executeTask(task)) {
+                        deleteTask(taskQueue,task,"tokens-create");
+                        createQueueCount++;	
+                    }
                 }		
             }
         } while(tasksList != null);
         
         com.google.api.services.taskqueue.model.TaskQueue updateQueue = getQueue(taskQueue,"tokens-update");
         
+        int updateQueueCount = 0;
         java.util.List<Task> updateTasksList = null;
         do {
             Tasks tasks = getLeasedTasks(taskQueue,"tokens-update",10);
             updateTasksList = tasks.getItems();
-            if(tasksList != null) {
+            if(updateTasksList != null) {
                 for(Task task : updateTasksList) {
-                    executeTask(task);	
-                    //deleteTask(taskQueue,task,"tokens-create");
+                    if(executeTask(task)) {
+                        deleteTask(taskQueue,task,"tokens-update");
+                        updateQueueCount++;
+                    }
                 }		
             }
         } while(tasksList != null);
         
-		log.info("Finishing TaskQueue <tokens-create / tokens-update> processor");
+		log.info("Finishing TaskQueue <tokens-created: " + createQueueCount + " / tokens-updated: " + updateQueueCount + "> processor");
 	}
 	
 	  /**
@@ -122,13 +147,61 @@ public class Main {
 	   * 
 	   * @param task The task that should be executed.
 	   */
-	  private static void executeTask(Task task) {
+	  private static boolean executeTask(Task task) {
 		String payloadBase64 = task.getPayloadBase64();
 		
 		if(payloadBase64 != null) {
 			byte[] payload = Base64.decodeBase64(payloadBase64.getBytes());
-			log.info("Payload for the task:" + new String(payload));
+			
+	        try {
+				AmazonSimpleDB sdb = new AmazonSimpleDBClient(new PropertiesCredentials(
+						Main.class.getClassLoader().getResourceAsStream("awscredentials.properties")));
+				sdb.setEndpoint("sdb.amazonaws.com"); // to define Data Center Region
+				
+				Gson gson = new GsonBuilder().create();
+				MessagingToken token = gson.fromJson(new String(payload),MessagingToken.class);
+				
+				String bundleId = token.getBundleId();
+				if(token.isTestMode())
+					bundleId = bundleId.toLowerCase() + ".debug";
+	            sdb.createDomain(new com.amazonaws.services.simpledb.model.CreateDomainRequest(bundleId));
+				
+				List<ReplaceableItem> sdbTokenList = new ArrayList<ReplaceableItem>();
+				ReplaceableItem item = new ReplaceableItem(token.getKey().getName());
+				
+				List<ReplaceableAttribute> sdbTokenAttributes = new ArrayList<ReplaceableAttribute>();
+				sdbTokenAttributes.add(new ReplaceableAttribute("alias",token.getTagsAsString(),true));
+				sdbTokenAttributes.add(new ReplaceableAttribute("active",token.isActive() ? "true" : "false",true));
+				sdbTokenAttributes.add(new ReplaceableAttribute("alias",token.getTagsAsString(),true));
+				java.util.Date date=new java.util.Date((long)token.getLast_registration_time());
+				
+				SimpleDateFormat formatUTC = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+				formatUTC.setTimeZone(TimeZone.getTimeZone("UTC"));
+				sdbTokenAttributes.add(new ReplaceableAttribute("last_registration",formatUTC.format(date),true));
+				
+				item.setAttributes(sdbTokenAttributes);
+				
+				sdbTokenList.add(item);
+				
+				try {
+					sdb.batchPutAttributes(new BatchPutAttributesRequest(bundleId, sdbTokenList));
+				}
+				catch(NoSuchDomainException nse) {
+					// Wait for 30 seconds and try again
+					Thread.sleep(30000);
+					sdb.batchPutAttributes(new BatchPutAttributesRequest(bundleId, sdbTokenList));
+				}
+	            return true;
+				
+			} catch (AmazonServiceException ase) {
+	            log.error("Caught an AmazonServiceException, which means your request made it to Amazon SimpleDB, but was rejected with an error response for some reason.Error Message:" + ase.getMessage() + " HTTP Status Code:" + ase.getStatusCode() + " AWS Error Code:" + ase.getErrorCode() + " Error Type:" + ase.getErrorType() + " Request ID:" + ase.getRequestId() + " Payload:" + new String(payload), ase);
+	        } catch (AmazonClientException ace) {
+	            log.error("Caught an AmazonClientException, which means the client encountered a serious internal problem while trying to communicate with SimpleDB, such as not being able to access the network. Payload: " + new String(payload), ace);
+	        } catch (Exception e) {
+				log.error("Failed to synchronize token : " + new String(payload), e);
+			}
 		}
+		return false;
 	  }
 
 	  /**
