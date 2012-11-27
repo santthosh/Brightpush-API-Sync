@@ -27,6 +27,7 @@
   <target name="jar" depends="compile">
 	<copy file="src/log4j.properties" todir="bin"/>
 	<copy file="src/googleapi.properties" todir="bin"/>
+	<copy file="src/awscredentials.properties" todir="bin"/>
     <jar destfile="../../bin/aim-token-synchronization.jar" basedir="bin">
       <manifest>
         <attribute name="Main-Class" value="in.brightpush.resque.aim.synchronization.Main"/>
