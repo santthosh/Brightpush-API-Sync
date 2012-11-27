@@ -80,6 +80,9 @@ public class MessagingToken {
 	}
 	
 	public String getTagsAsString() {
+		if(this.getTags() == null || this.getTags().isEmpty())
+			return "";
+		
 	    StringBuilder sb = new StringBuilder();
 	    String loopDelim = "";
 	    for(String s : getTags()) {
